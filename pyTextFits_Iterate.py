@@ -7,11 +7,16 @@ from pyTexture import guessDSpacing, getPeakCens, gauss, getHKL, fakePseudoVoigt
 from itertools import count
 import numpy as np
 from scipy.optimize import curve_fit
+import matplotlib
+matplotlib.use('Agg') #Allows for saving figures without producing a window
 import matplotlib.pyplot as plt
 
 np.seterr(divide='ignore')
 
-iPlot = False
+if os.path.isfile('doPlots'):
+    iPlot = True
+else:
+    iPlot = False
 
 num_X = 2048
 num_Y = 2048
@@ -39,6 +44,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     angleList = []
     cLi = []
     pkLi = []
+    runNum = inFilename.split('_')[-1].split('.')[0]
     print 'Reading ' + inFilename
     with open(inFilename, mode='rb') as fileobj:
         rawData = np.fromfile(fileobj, np.float32, num_X * num_Y).astype('float32')
@@ -51,7 +57,6 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     peakWids = np.repeat(0.01,len(peakCens))
     dMax = np.max(peakCens) + 0.5
     x1, y1 = pF[0], pF[1]
-
     if cake:
         xd, yd   = pF[0] - np.arange(2048), pF[1] - np.arange(2048)
         xv, yv = np.meshgrid(xd, yd)
@@ -95,12 +100,12 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
             '''
 
             for c in [xx for xx in peakCens if xx > np.min(dSpac)]:
-                #mmX = np.argmin(np.abs(dSpac-c))
-                #print c
+                # mmX = np.argmin(np.abs(dSpac-c))
+                # print c
                 mm1=np.argmin(np.abs(dSpac-(c+peakWids[peakCens==c][0]*7)))
                 mm2=np.argmin(np.abs(dSpac-(c-peakWids[peakCens==c][0]*7)))
                 mmRange = np.array(range(np.max((np.min((mm1,mm2)),0)),np.min((np.max((mm1,mm2)),len(zi)))))
-                #if np.any(zi[mmRange] <= 0) or np.all(c > (dSpac[mmRange])):
+                # if np.any(zi[mmRange] <= 0) or np.all(c > (dSpac[mmRange])):
                 if False:
                     pass
                 else:
@@ -119,7 +124,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                     mRan = zi[mmRange].argsort()[:5]
                     bx = np.hstack(([mmRange[0],mmRange[-1]], mmRange[mRan]))
                     by = np.hstack(([zi[mmRange[0]],zi[mmRange[-1]]],zi[mmRange][mRan]))
-                    bkfit = np.polyfit(bx,by,2);
+                    bkfit = np.polyfit(bx,by,2)
                     newArea = np.sum(zi[mmRange]) - np.sum(np.polyval(bkfit,mmRange))
 
                     p0 = [np.max(zi[mmRange]) - np.min(zi[mmRange]),dSpac[mm2+np.argmax(zi[mmRange])],peakWids[peakCens==c],np.min(zi[mmRange])]
@@ -131,21 +136,21 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                     if doPlot:
                         resca = np.linspace(dSpac[mmRange[0]],dSpac[mmRange[-1]],500)
                         resca2 = np.linspace(mmRange[0],mmRange[-1],500)
-                        #pk_fit = gauss(resca, *coeff)
-                        #ax.plot(dSpac[mmRange],zi[mmRange],'.')
-                        #ax.axvline(dSpac[mmRange[0]])
-                        #ax.axvline(dSpac[mmRange[-1]])
+                        # pk_fit = gauss(resca, *coeff)
+                        # ax.plot(dSpac[mmRange],zi[mmRange],'.')
+                        # ax.axvline(dSpac[mmRange[0]])
+                        # ax.axvline(dSpac[mmRange[-1]])
                         ax.plot(dSpac[bx],by,'ro')
                         ax.plot(resca,fakePseudoVoigt(resca,*coeff)+np.polyval(bkfit,resca2),'-',lw=2)
 
                     if coeff[2] > 0.1:
                         print coeff
-                        #ax.plot(resca,gauss(resca,*p0),'k--')
+                        # ax.plot(resca,gauss(resca,*p0),'k--')
                         pass
                     else:
                         zi[mmRange] = zi[mmRange] - fakePseudoVoigt(dSpac[mmRange],*coeff)
-                        #if doPlot: ax.plot(resca,pk_fit,'-')
-                        #areaLi = np.append(areaLi, coeff[0] * coeff[2] * areaScale)
+                        # if doPlot: ax.plot(resca,pk_fit,'-')
+                        # areaLi = np.append(areaLi, coeff[0] * coeff[2] * areaScale)
                         areaLi = np.append(areaLi, newArea)
                         if not cake:
                             xLi = np.append(xLi, np.interp(coeff[1],range(np.size(kKeys)),x))
@@ -157,15 +162,15 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                             pass
                         else:
                             np.place(peakCens,peakCens == c,coeff[1])
-                        #np.place(peakWids,peakCens == c,coeff[2])
+                        # np.place(peakWids,peakCens == c,coeff[2])
         if doPlot:
             ax.set_ylim(0,650)
             ax.set_xlim(1.2,3)
             print '%.2f' % angle
             ax.plot(dSpac[:np.size(zi)],zi,'r.')
-            plt.show()
+            #plt.show()
+            plt.savefig('myfig')
     theta = 90 - 0 * cLi#- np.degrees(np.arcsin(wavelength / (2 * cLi))/2)
-    runNum = inFilename.split('_')[-1].split('.')[0]
     try:
         os.makedirs(outDir + runNum)
     except:
