@@ -5,13 +5,13 @@ Created on Nov 21, 2014
 '''
 
 from itertools import combinations_with_replacement, combinations, product, repeat,chain
-from warnings import warn
-from numpy import sin, cos, sqrt, arctan2, exp
+# from warnings import warn
+from numpy import sin, cos, sqrt, arctan2, exp, log, divide, clip
 from scipy.optimize import leastsq, curve_fit
-import numpy as np
-import threading
-from Queue import Queue
-import matplotlib.pyplot as plt
+# import numpy as np
+# import threading
+# from Queue import Queue
+# import matplotlib.pyplot as plt
 
 def isBCC(x):
     if sum(x) == 0:
@@ -84,19 +84,19 @@ def gaussDoublet(x, *p):
 def fakePseudoVoigt(x, *p):
     height, center, hwhm, y0 = p
     shape=0.4
-    return height*((1-shape)*exp(-np.log(2)*(np.divide((x-center),hwhm))**2)+shape*1/(1+(np.divide(x-center,hwhm))**2)) +  y0
+    return height*((1-shape)*exp(-log(2)*(divide((x-center),hwhm))**2)+shape*1/(1+(divide(x-center,hwhm))**2)) +  y0
 
 def PseudoVoigt(x, *p):
     height, center, hwhm, sha, y0 = p
     shape = sin(sha)**2
-    return height*((1-shape)*exp(-np.log(2)*(np.divide((x-center),hwhm))**2)+shape*1/(1+(np.divide(x-center,hwhm))**2)) +  y0
+    return height*((1-shape)*exp(-log(2)*(divide((x-center),hwhm))**2)+shape*1/(1+(divide(x-center,hwhm))**2)) +  y0
     #return A * exp(-(x - mu) ** 2 / (2.*sigma ** 2)) + y0
 
 def textResample(z, x, y):
     x1 = x.astype('int')
-    x2 = np.clip(x1+1,0,2047)
+    x2 = clip(x1+1,0,2047)
     y1 = y.astype('int')
-    y2 = np.clip(y1+1,0,2047)
+    y2 = clip(y1+1,0,2047)
 
     EPSILON = (x1 + .5 - x) * -2
     ETA     = (y1 + .5 - y) * -2

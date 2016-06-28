@@ -3,13 +3,13 @@
 from multiprocessing import Process, Queue
 import os
 import glob
-from pyTexture import guessDSpacing, getPeakCens, gauss, getHKL, fakePseudoVoigt, textResample
-from itertools import count
-import numpy as np
-from scipy.optimize import curve_fit
 import matplotlib
 matplotlib.use('Agg') #Allows for saving figures without producing a window
 import matplotlib.pyplot as plt
+from itertools import count
+import numpy as np
+from scipy.optimize import curve_fit
+from pyTexture import guessDSpacing, getPeakCens, gauss, getHKL, fakePseudoVoigt, textResample
 
 np.seterr(divide='ignore')
 
@@ -23,9 +23,9 @@ num_Y = 2048
 num = 2000
 areaScale = np.sqrt(np.log(2)/np.pi)
 arcRad = 1024 * 1.42
-rhoStart, rhoEnd = -180, 180
-rhoN = 360
-outDir = '.'
+rhoStart, rhoEnd = 0, 20
+rhoN = 10
+outDir = './'
 
 import logging
 logger = logging.getLogger('myapp')
@@ -48,7 +48,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     print 'Reading ' + inFilename
     with open(inFilename, mode='rb') as fileobj:
         rawData = np.fromfile(fileobj, np.float32, num_X * num_Y).astype('float32')
-    z = rawData.reshape((num_X, num_Y));
+    z = rawData.reshape((num_X, num_Y))
 
     #peakCens = getPeakCens('hcp',[3.23433391, 5.163978], 2)
     peakCens = np.array([2.78126, 2.4591, 2.585,1.90, 1.60544, 1.2384])
@@ -57,8 +57,10 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     peakWids = np.repeat(0.01,len(peakCens))
     dMax = np.max(peakCens) + 0.5
     x1, y1 = pF[0], pF[1]
+    if doPlot:
+        fig, ax = plt.subplots(1, 1)
     if cake:
-        xd, yd   = pF[0] - np.arange(2048), pF[1] - np.arange(2048)
+        xd, yd = pF[0] - np.arange(2048), pF[1] - np.arange(2048)
         xv, yv = np.meshgrid(xd, yd)
         psi = np.degrees(np.arctan2(-np.sin(pF[3])*xv + np.cos(pF[2]) * yv, np.cos(pF[3]) * (np.cos(pF[2]) * xv + np.sin(pF[2]) * yv)))
         arcWid = np.abs(rhoStart - rhoEnd) / rhoN / 2.
@@ -80,17 +82,17 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
             pass
         else:
             if cake:
-                binedges = np.linspace(np.min(dSpac),np.max(dSpac),512)
+                binedges = np.linspace(np.min(dSpac),np.max(dSpac),1024)
                 dg = np.digitize(dSpac,binedges)
-                ind    = np.argsort(dg)
+                ind = np.argsort(dg)
                 splits = np.where(np.diff(dg[ind]))[0]
-                sliceInt = np.split(z[cakeMat][kKeys][ind],splits)[1:];
+                sliceInt = np.split(z[cakeMat][kKeys][ind],splits)[1:]
                 zi= np.array([x.mean() for x in sliceInt])
                 dSpac = np.array(binedges[1:])
             else:
                 zi = textResample(z,x,y)
             if doPlot:
-                _, ax = plt.subplots(1,1)
+                plt.cla()
                 ax.plot(dSpac[:np.size(zi)],zi,'k.-')
             '''
             BGmm1=np.argmin(np.abs(dSpac-(2.17+0.01*7)))
@@ -102,8 +104,8 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
             for c in [xx for xx in peakCens if xx > np.min(dSpac)]:
                 # mmX = np.argmin(np.abs(dSpac-c))
                 # print c
-                mm1=np.argmin(np.abs(dSpac-(c+peakWids[peakCens==c][0]*7)))
-                mm2=np.argmin(np.abs(dSpac-(c-peakWids[peakCens==c][0]*7)))
+                mm1=np.argmin(np.abs(dSpac-(c+peakWids[peakCens==c][0]*10)))
+                mm2=np.argmin(np.abs(dSpac-(c-peakWids[peakCens==c][0]*10)))
                 mmRange = np.array(range(np.max((np.min((mm1,mm2)),0)),np.min((np.max((mm1,mm2)),len(zi)))))
                 # if np.any(zi[mmRange] <= 0) or np.all(c > (dSpac[mmRange])):
                 if False:
@@ -124,12 +126,19 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                     mRan = zi[mmRange].argsort()[:5]
                     bx = np.hstack(([mmRange[0],mmRange[-1]], mmRange[mRan]))
                     by = np.hstack(([zi[mmRange[0]],zi[mmRange[-1]]],zi[mmRange][mRan]))
-                    bkfit = np.polyfit(bx,by,2)
+                    bkfit = np.polyfit(bx,by,0)
                     newArea = np.sum(zi[mmRange]) - np.sum(np.polyval(bkfit,mmRange))
 
                     p0 = [np.max(zi[mmRange]) - np.min(zi[mmRange]),dSpac[mm2+np.argmax(zi[mmRange])],peakWids[peakCens==c],np.min(zi[mmRange])]
                     try:
-                        coeff, _ = curve_fit(fakePseudoVoigt, dSpac[mmRange], zi[mmRange]-np.polyval(bkfit,mmRange), p0,xtol=1e-2)
+                        coeff, pcov = curve_fit(fakePseudoVoigt, dSpac[mmRange], zi[mmRange]-np.polyval(bkfit,mmRange), p0,xtol=1e-2,method='lm')
+                        perr = np.sqrt(np.diag(pcov))
+                        print 'FIRST LINE'
+                        print pcov
+                        print ''
+                        print coeff
+                        print perr
+                        print ''
                     except:
                         coeff = np.array([0, c, 1e-3, 0])
                                        
@@ -164,13 +173,16 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                             np.place(peakCens,peakCens == c,coeff[1])
                         # np.place(peakWids,peakCens == c,coeff[2])
         if doPlot:
-            ax.set_ylim(0,650)
+            ax.set_ylim(1,1e3)
             ax.set_xlim(1.2,3)
-            print '%.2f' % angle
+            ax.set_yscale('log')
+            # print '%.2f' % angle
             ax.plot(dSpac[:np.size(zi)],zi,'r.')
             #plt.show()
-            plt.savefig('myfig')
-    theta = 90 - 0 * cLi#- np.degrees(np.arcsin(wavelength / (2 * cLi))/2)
+            figOut = outDir + 'fig/' + runNum + '_' + str(np.round(angle)) + '.png'
+            print figOut
+            plt.savefig(figOut)
+    theta = 90 - 0 * cLi  #- np.degrees(np.arcsin(wavelength / (2 * cLi))/2)
     try:
         os.makedirs(outDir + runNum)
     except:
@@ -186,11 +198,10 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
             #print 'Output to ' + outFile
             M = np.vstack((theta[nKeys], angleList[nKeys], areaLi[nKeys]))
             np.savetxt(outFile,M.T,fmt='%.6f',delimiter=' ')
-    print 'Files output to ' + outputName
-
+    print 'Files output to ' + outFile
 
 lam = 0.1441
-ceriaDat = np.array([1.01141128e+03,   1.02430730e+03,  -1.70246315e+03,  -3.39086205e-02, 1.60051457e+00])
+ceriaDat = np.array([  1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
 fList = glob.glob('../tubes/GE4Tube*sum')
 a = (ceriaDat,lam)
 
@@ -198,11 +209,12 @@ for f, n in zip(fList,count()):
     oName = outDir + f.split('_')[-1].split('.')[0] + '/'
 
 #    if (~os.path.exists(oName)):
-    try:
-        textureFitsFile(f, *a, doPlot=iPlot)
-    except:
-        st = 'File error: ' + f.split('_')[-1].split('.')[0]
-        logger.error(st)
+#     try:
+    textureFitsFile(f, *a, doPlot=iPlot)
+    # except:
+    #     st = 'File error: ' + f.split('_')[-1].split('.')[0]
+    #     logger.error(st)
+    #     print st
 #    else:
 #        pass
     print '%d of %d files complete.' % (n+1, len(fList))
