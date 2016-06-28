@@ -20,7 +20,7 @@ areaScale = np.sqrt(np.log(2)/np.pi)
 arcRad = 1024 * 1.42
 rhoStart, rhoEnd = -180, 180
 rhoN = 360
-outDir = '/home/chris/PyText/Data2/'
+outDir = '.'
 
 import logging
 logger = logging.getLogger('myapp')
@@ -186,7 +186,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
 
 lam = 0.1441
 ceriaDat = np.array([1.01141128e+03,   1.02430730e+03,  -1.70246315e+03,  -3.39086205e-02, 1.60051457e+00])
-fList = glob.glob('/home/chris/Tubes/ge/H737*sum') + glob.glob('/home/chris/Tubes/ge/CC009Real*sum') + glob.glob('/home/chris/Tubes/ge/RX213*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
+fList = glob.glob('../tubes/GE4Tube*sum')
 a = (ceriaDat,lam)
 
 for f, n in zip(fList,count()):
