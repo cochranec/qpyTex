@@ -1,6 +1,4 @@
 #!/usr/bin/python
-#import threading
-from multiprocessing import Process, Queue
 import os
 import glob
 import matplotlib
