@@ -6,7 +6,7 @@ cd '/home/chris/Python/qpyTex/MTEX'
 %%
 n = 0;
 dn = 1;
-indx = [4089:4124];
+indx = [5025:5060];
 step = 5;
 for ind = indx
     pname = [dataDir sprintf('%05d',ind) '/'];
@@ -22,13 +22,14 @@ for ind = indx
 end
 measPF = normalize(measPF);
 %%
-myODF = calcODF(normalize(measPF),'resolution', 10 * degree);
+myODF = calcODF(measPF);
 %%
 
 rot1 = axis2quat(xvector, (65) * degree);
 rot2 = axis2quat(yvector, 90 * degree);
 rot3 = axis2quat(xvector, 90 * degree);
 figure(1), plot(rotate(measPF, rot2 * rot1),'contourf');
-figure(2),plotPDF(rotate(odf2,rot2 * rot1),{Miller(0,0,2,hexSym), Miller(1,0,0,hexSym)})
 %%
-figure(3), plot(rotate(normalize(measPF), rot1),'colorrange',[0 5]);
+figure(2),plotPDF(rotate(myODF,rot1),{Miller(0,0,2,hexSym), Miller(1,0,0,hexSym)},'contourf',0:5)
+%%
+figure(3), plot(rotate(measPF, rot1),'contourf',[0 5]);

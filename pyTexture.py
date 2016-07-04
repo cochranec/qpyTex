@@ -119,7 +119,7 @@ def runQueues(files, fxn, params):
     for fs in files:
         q.put(fs)
 
-    print 'Starting queue with %d files.' % (len(files))
+    print strftime('%H:%M:%S')  + ' Starting queue with %d files.' % (len(files))
 
     for _ in range(nThread):
         worker = threading.Thread(target=feedQueue, args=(q, fxn, params,))
