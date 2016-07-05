@@ -30,6 +30,11 @@ rhoStep = 5
 rhoN = 90
 outDir = './'
 
+lam = 0.1441
+ceriaDat = np.array([1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
+# fList = glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
+fList = glob.glob('/home/chris/Tubes/ge/GE4Tube_04089*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0409*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0410*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0411*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0412*sum')
+
 import logging
 logger = logging.getLogger('myapp')
 hdlr = logging.FileHandler(outDir + '/pyText.log')
@@ -45,8 +50,8 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
 
     x1, y1 = pF[0], pF[1]
     c = [2.79, 2.56, 2.45, 1.88, 1.60]
-    cMult = [6, 2, 12, 12, 6]
     pkInd = ['100', '002', '101', '102', '110']
+    cMult = [6, 2, 12, 12, 6]
 
     runNum = inFilename.split('_')[-1].split('.')[0]
     with open(inFilename, mode='rb') as fileobj:
@@ -143,12 +148,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
         plt.savefig(figOut)
         plt.close()
 
-lam = 0.1441
-ceriaDat = np.array([1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
-# fList = glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
-fList = glob.glob('/home/chris/Tubes/ge/GE4Tube_0509*sum')
 a = (ceriaDat,lam)
-
 runQueues(fList,textureFitsFile, a)
 
 # for f, n in zip(fList,count()):
