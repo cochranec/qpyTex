@@ -32,8 +32,8 @@ outDir = './'
 
 lam = 0.1441
 ceriaDat = np.array([1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
-# fList = glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
-fList = glob.glob('/home/chris/Tubes/ge/CC*sum')
+
+fList = glob.glob('../tubes/CC00*sum')
 
 import logging
 logger = logging.getLogger('myapp')
@@ -51,7 +51,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     x1, y1 = pF[0], pF[1]
     c = [2.79, 2.56, 2.45, 1.88, 1.60]
     pkInd = ['100', '002', '101', '102', '110']
-    cMult = [6, 2, 12, 12, 6]
+    cMult = [1, 1, 1, 1, 1]
 
     runNum = inFilename.split('_')[-1].split('.')[0]
     with open(inFilename, mode='rb') as fileobj:
@@ -72,9 +72,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
                 -np.sin(pF[3])*xv + np.cos(pF[2]) * yv, np.cos(pF[3]) * (np.cos(pF[2]) * xv + np.sin(pF[2]) * yv)
             )
         )
-        #arcWid = np.abs(rhoStart - rhoEnd) / rhoN / 2.
         arcWid = rhoStep
-    #for angle in np.linspace(rhoStart, rhoEnd, rhoN):
     datBuff = np.zeros((np.arange(rhoStart, rhoEnd, rhoStep).size, 6))
     for angle, k in zip(np.arange(rhoStart, rhoEnd, rhoStep), count(0)):
         x2, y2 = x1 + arcRad * np.cos(np.radians(angle)), y1 + arcRad * np.sin(np.radians(angle))
@@ -154,3 +152,7 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
 
 a = (ceriaDat,lam)
 runQueues(fList,textureFitsFile, a)
+
+# for f, n in zip(fList,count()):
+#     textureFitsFile(f, *a)
+#     print '%d of %d files complete.' % (n+1, len(fList))
