@@ -33,7 +33,7 @@ outDir = './'
 lam = 0.1441
 ceriaDat = np.array([1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
 # fList = glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
-fList = glob.glob('/home/chris/Tubes/ge/GE4Tube_04089*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0409*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0410*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0411*sum') + glob.glob('/home/chris/Tubes/ge/GE4Tube_0412*sum')
+fList = glob.glob('/home/chris/Tubes/ge/*_1556*sum')
 
 import logging
 logger = logging.getLogger('myapp')
@@ -44,7 +44,7 @@ logger.addHandler(hdlr)
 logger.setLevel(logging.WARNING)
 
 
-def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
+def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     dMax = 3.1
     dMin = 1.5
 
@@ -97,25 +97,29 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
             pass
         else:
             if cake:
-                binedges = np.linspace(np.min(dSpac),np.max(dSpac),256)
-                # dg = np.digitize(dSpac,binedges)
-                # zi = np.zeros(binedges.size)
-                # for ii in range(256):
-                #     ind = np.where(dg == ii)
-                #     zi[ii] = np.sum(zSlice[ind]) / np.maximum(len(ind),1)
-
-                # Split d-Spacing array into 256 equal size segments and take the mean
-                # (Throws out last N - 256 * k data points
-                ind = np.argsort(dSpac)
-                ll =  dSpac.size / 256
-                zi = np.mean(np.reshape(zSlice[ind][:ll*256], (256,-1),), axis=1)
-                dSpac = np.mean(np.reshape(dSpac[ind][:ll*256], (256,-1), ), axis=1)
-
-                # splits = np.where(np.diff(dg[ind]))[0]
-                # sliceInt = np.split(z[ind],splits)[1:]
-                # zi= np.array([np.maximum(x.mean(),1) for x in sliceInt])
-
-                #dSpac = np.array(binedges)
+                sliceStyle = True
+                if sliceStyle:
+                    # Split the d-spacing space into 256 equally spaced bins and take the mean.
+                    # The number of pixels per bin will vary.
+                    binedges = np.linspace(np.min(dSpac),np.max(dSpac),256)
+                    dg = np.digitize(dSpac,binedges)
+                    zi = np.zeros(binedges.size)
+                    for ii in np.intersect1d(dg,np.arange(256)):
+                        ind = np.where(dg == ii)
+                        zi[ii] = np.sum(zSlice[ind])
+                    # Fill empty slices with the average of adjacent slices
+                    for ii in np.setxor1d(dg,np.arange(256)):
+                        if ii < np.size(zi):
+                            zi[ii] = np.mean([zi[ii-1],zi[ii+1]])
+                    dSpac = np.array(binedges)
+                else:
+                    # Split d-Spacing array into 256 equal pixel number segments and take the mean
+                    # The number of pixels in each bin is equal.
+                    # NB: Throws out last N - 256 * k data points
+                    ind = np.argsort(dSpac)
+                    ll =  dSpac.size / 256
+                    zi = np.mean(np.reshape(zSlice[ind][:ll*256], (256,-1),), axis=1)
+                    dSpac = np.mean(np.reshape(dSpac[ind][:ll*256], (256,-1), ), axis=1)
             else:
                 zi = textResample(z,x,y)
             if doPlot:

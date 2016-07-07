@@ -13,12 +13,6 @@ function myPF = getPFfromFiles(fname, mSym)
     end
     mH = mH(~cellfun('isempty',mH));
     fnames = fnames(~cellfun('isempty',fnames));
-    pf = loadPoleFigure(fnames, mH,mSym,'ColumnNames', {'Polar Angle' 'Azimuth Angle' 'Intensity'},'infolvl',0);
-%     for i=1:numel(pf)
-%         cpf = pf(i);
-%         cpf(cpf.isOutlier) = [];
-%         pf(i) = cpf;
-%     end
-
+    pf = loadPoleFigure(fnames, mH,mSym,'ColumnNames', {'Polar Angle' 'Azimuth Angle' 'Intensity'},'InfoLevel',0);
     myPF = pf;
 end
