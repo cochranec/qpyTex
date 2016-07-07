@@ -1,8 +1,8 @@
-'''
+"""
 Created on Nov 21, 2014
 
 @author: chris
-'''
+"""
 
 from itertools import combinations_with_replacement, combinations, product, repeat,chain
 # from warnings import warn
@@ -118,7 +118,7 @@ def runQueues(files, fxn, params):
         q.put(fs)
 
     monitor = threading.Thread(target=monitorQueue, args=(q, 30))
-    monitor.setDaemon(True)
+    monitor.setDaemon(False)
     monitor.start()
 
     for _ in range(nThread):
@@ -139,11 +139,12 @@ def feedQueue(q, fxn, param):
 def monitorQueue(q, delay):
     start_size = q.qsize()
     start_time = time()
-
-    print strftime('%H:%M:%S')  + ' Starting queue with %d files.' % (start_size)
-    while True:
+    current_size = q.qsize()
+    print strftime('%H:%M:%S') + ' Starting queue with %d files.' % start_size
+    while current_size > 0:
         sleep(delay)
         current_size = q.qsize()
         current_time = time()
         time_remain = ((current_time - start_time) / (start_size - current_size) * current_size) / 60
         print strftime('%H:%M:%S') + ' ' + str(current_size) + ' files remain in queue.  Process time remaining: ' + str(time_remain)
+    print 'Queue is now empty!'
