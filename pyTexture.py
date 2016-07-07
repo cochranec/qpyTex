@@ -117,7 +117,7 @@ def runQueues(files, fxn, params):
     for fs in files:
         q.put(fs)
 
-    monitor = threading.Thread(target=monitorQueue, args=(q, 30))
+    monitor = threading.Thread(target=monitorQueue, args=(q, 5))
     monitor.setDaemon(False)
     monitor.start()
 

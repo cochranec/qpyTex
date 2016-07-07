@@ -34,15 +34,15 @@ fList = glob.glob('../tubes/*sum')
 # logger.addHandler(hdlr)
 # logger.setLevel(logging.WARNING)
 
-def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
+def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
     dMax = 3.1
     dMin = 1.5
 
     x1, y1 = pF[0], pF[1]
-    c = [2.79, 2.58, 2.45, 1.88, 1.60]
+    c = [2.80, 2.575, 2.46, 1.89, 1.616]
     pkInd = ['100', '002', '101', '102', '110']
     cMult = [1, 1, 1, 1, 1]
-    pkWid = [0.05, 0.03, 0.05, 0.05, 0.05]
+    pkWid = [0.07, 0.035, 0.04, 0.04, 0.035]
     sliceCount = 512
 
     runNum = inFilename.split('_')[-1].split('.')[0]
@@ -153,8 +153,8 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=True):
             os.makedirs(outDir + 'fig_fits')
         except:
             pass
-        ax.set_xlim(2.5, 2.65)
-        ax.set_ylim(0, 50000)
+        ax.set_xlim(dMin,dMax)
+        ax.set_ylim(0, 100000)
         figOut = outDir + 'fig_fits/' + runNum + '.png'
         plt.savefig(figOut)
         plt.close()
