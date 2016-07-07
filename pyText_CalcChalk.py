@@ -33,7 +33,7 @@ outDir = './'
 lam = 0.1441
 ceriaDat = np.array([1.01038456e+03, 1.02344190e+03,  7.03712550e+03, -1.89784818e-02, 1.60107261e+00])
 # fList = glob.glob('/home/chris/Tubes/ge/GE4Tube*sum')
-fList = glob.glob('/home/chris/Tubes/ge/*_1556*sum')
+fList = glob.glob('/home/chris/Tubes/ge/CC*sum')
 
 import logging
 logger = logging.getLogger('myapp')
@@ -154,7 +154,3 @@ def textureFitsFile(inFilename, pF, wavelength, cake=True, doPlot=False):
 
 a = (ceriaDat,lam)
 runQueues(fList,textureFitsFile, a)
-
-# for f, n in zip(fList,count()):
-#     textureFitsFile(f, *a)
-#     print '%d of %d files complete.' % (n+1, len(fList))

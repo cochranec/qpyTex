@@ -11,7 +11,7 @@ from numpy import sin, cos, sqrt, arctan2, exp, log, divide, clip
 # import numpy as np
 import threading
 from Queue import Queue
-from time import strftime
+from time import strftime, sleep, time
 # import matplotlib.pyplot as plt
 
 def isBCC(x):
@@ -117,7 +117,9 @@ def runQueues(files, fxn, params):
     for fs in files:
         q.put(fs)
 
-    print strftime('%H:%M:%S')  + ' Starting queue with %d files.' % (len(files))
+    monitor = threading.Thread(target=monitorQueue, args=(q, 30))
+    monitor.setDaemon(True)
+    monitor.start()
 
     for _ in range(nThread):
         worker = threading.Thread(target=feedQueue, args=(q, fxn, params,))
@@ -126,10 +128,22 @@ def runQueues(files, fxn, params):
 
     q.join()
 
+
 def feedQueue(q, fxn, param):
     while True:
         f = q.get()
-        sizeOfQueue = q.qsize()
         fxn(f, *param)
-        print strftime('%H:%M:%S') +' ' + str(sizeOfQueue) + ' files remain in queue.'
         q.task_done()
+
+
+def monitorQueue(q, delay):
+    start_size = q.qsize()
+    start_time = time()
+
+    print strftime('%H:%M:%S')  + ' Starting queue with %d files.' % (start_size)
+    while True:
+        sleep(delay)
+        current_size = q.qsize()
+        current_time = time()
+        time_remain = ((current_time - start_time) / (start_size - current_size) * current_size) / 60
+        print strftime('%H:%M:%S') + ' ' + str(current_size) + ' files remain in queue.  Process time remaining: ' + str(time_remain)
